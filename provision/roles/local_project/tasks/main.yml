@@ -1,0 +1,40 @@
+---
+
+# Операции с файлами
+- include: create_dirs.yml
+
+# Определение существующих директорий
+- stat: path={{ mainapp_dir }}
+  register: mainapp_d
+
+- stat: path={{ mainapp_dir }}/local_settings.py
+  register: local_settings
+
+# Создаем виртуальную среду для python
+- name: Project | Create virtualenv
+  shell: virtualenv -p /usr/binpython3.4 {{ venv_path }}
+
+# Устанавливаем зависимости виртуальной среды
+- name: Project | Install pip requirements
+  pip: requirements={{ project_path }}/requirements.txt virtualenv={{ venv_path }}
+
+# Создадим проект, если он не создан
+- name: Project | Create project
+  shell: '{{ venv_path }}/bin/django-admin.py startproject {{ mainapp_name }} {{ project_path }}'
+  args:
+    project_directory: '{{ project_path }}'
+  when:
+    mainapp_d.stat.isdir is not defined
+
+
+# Рендерими загружаем файл локальных настроек
+- name: Project | Render local_settings.py
+  template: src=local_settings.py dest={{ mainapp_dir }}/local_settings.py
+
+# Собираем статистику
+- name: Project | Collect static
+  django_manage: command=collectstatic app_path=/vagrant virtualenv={{ venv_path }}
+
+# Проводим миграции
+- name: Project | Migrate
+  django_manage: command=migrate app_path=/vagrant virtualenv={{ venv_path }}

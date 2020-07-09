@@ -1,0 +1,39 @@
+- stat: path=/etc/postgresql/9.5/main/
+  register: p
+  sudo: yes
+
+# Создадим кластер, если он еше не создан
+- name: PostgreSQL | Create cluster
+  shell: pg_createcluster 9.5 main --start
+  when: p.stat.isdir is not defined
+  notify:
+    - restart postgresql
+  sudo: yes
+
+# Изменим файл настройки авторищации в postgresql
+- name: PostgreSQL | Patch pg_hba
+  template: src=pg_hba.conf dest=/etc/postgresql/9.5/main/pg_hba.conf owner=postgres
+  sudo: yes
+
+# Перезапустим postgresql
+- name: PostgreSQL | restart service
+  shell: sudo service postgresql restart
+
+# Создадим БД для проекта
+- name: PostgreSQL | Create PostgreSQL db
+  postgresql_db: db={{ pg_db_name }}
+                 login_user='postgres'
+                 name={{ pg_db_user }}
+                 password={{ pg_db_password }}
+                 role_attr_flags=CREATEDB,NOSUPERUSER
+  sudo: yes
+  sudo_user: 'postgres'
+
+# Изменим файл настройки авторищации в postgresql (авторизация root)
+- name: PostgreSQL | Patch pg_hba (prod)
+  template: src=pg_hba_prod.conf dest=/etc/postgresql/9.5/main/pg_hba.conf owner=postgres
+  sudo: yes
+
+# Перезапустим postgresql
+- name: PostgreSQL | restart service
+  shell: sudo service postgresql restart

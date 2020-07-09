@@ -1,0 +1,44 @@
+
+# Добавляем ключи Postgresql
+- name: System | Add PostgreSQL Repo keys
+  apt_key: url=https://postgresql.org/media/keys/ACCC4CF8.asc state=present
+  sudo: yes
+
+# Обновим список пакетов
+- name: System | apt-get update
+  sudo: yes
+  apt: update_cache=yes cache_valid_time=60
+
+# Установим требуемые пакеты
+- name: System | install packages
+  sudo: yes
+  apt: pkg={{ item }} state=present
+  with_items:
+    - python3.4
+    - python-pip
+    - postgresql-9.5
+    - postgresql-client-9.5
+    - postgresql-contrib
+    - libpq-dev
+    - python-psycopg2
+    - python-virtualenv
+    - libjpeg-dev
+    - libgcrypt11-dev
+    - zlib1g-dev
+    - libpng-dev
+    - nginx
+    - redis-server
+    - git-core
+    - ruby1.9.1-dev
+    - nodejs
+    - nodejs-legacy
+    - npm ruby-compass
+
+
+# Обновим список пакетов
+- name: System | build-dep python-imaging
+  sudo: yes
+  apt: pkg={{ item }} state=build-dep
+  with_items:
+    - python-imaging
+    - python-psycopg2

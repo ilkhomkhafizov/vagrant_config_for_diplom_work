@@ -1,0 +1,15 @@
+---
+
+# Удалим папку node_modules, если она существует
+- name: NPM | remove old node modules
+  files: path='{{ frontend_dir }}/node_modules' state=absent
+  sudo: yes
+
+# Устанавливаем compass
+- name: NPM | Install Compass
+  gem: name=compass version=1.0.3
+  sudo: yes
+
+# Устанавливаем зависимости npm
+- name: NPM | Install NPM Requirements
+  npm: path={{ frontend_dir }}
